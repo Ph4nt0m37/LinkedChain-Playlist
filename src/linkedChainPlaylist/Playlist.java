@@ -10,8 +10,20 @@ public class Playlist
         playlist.addToEnd(song);
     }
     
-    public void removeSong(Song song) {
-        playlist.remove(song);
+    public boolean removeSong(Song song) {
+        return playlist.remove(song);
+    }
+
+    public Song getSong(int index) {
+        return playlist.get(index);
+    }
+
+    public int size() {
+        return playlist.size();
+    }
+
+    public boolean isEmpty() {
+        return playlist.isEmpty();
     }
     
     public Song nextSong() {

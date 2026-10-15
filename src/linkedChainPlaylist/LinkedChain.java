@@ -1,3 +1,5 @@
+package linkedChainPlaylist;
+
 /**
  * A generic chain of linked nodes. Use it as the storage inside your
  * own classes, and extend or modify it as your project needs.

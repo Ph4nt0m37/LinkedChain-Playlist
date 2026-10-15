@@ -35,6 +35,35 @@ public class InputHandler
 
 
     /**
+     * Displays a prompt and repeatedly asks the user for input until a
+     * non-blank answer is provided. Leading and trailing spaces are removed.
+     *
+     * @param prompt
+     *            the message displayed to the user before input is read
+     * @param errorMessage
+     *            the message displayed when the user enters a blank line
+     * @return the user's trimmed, non-blank input
+     */
+    public static String getNonBlankInput(String prompt, String errorMessage)
+    {
+        while (true)
+        {
+
+            System.out.print(prompt);
+
+            String resp = scanner.nextLine().trim();
+
+            if (!resp.isEmpty())
+            {
+                return resp;
+            }
+
+            System.out.println(errorMessage);
+        }
+    }
+
+
+    /**
      * Displays a prompt and repeatedly asks the user for input until a valid
      * answer is provided.
      * <p>
