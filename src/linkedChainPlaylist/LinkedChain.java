@@ -1,38 +1,57 @@
 package linkedChainPlaylist;
 
 /**
- * A generic chain of linked nodes. Use it as the storage inside your
- * own classes, and extend or modify it as your project needs.
+ * A generic doubly linked chain of nodes. Use it as the storage inside your
+ * own classes.
  *
- * This class owns storage only: nodes, the head reference, and the
- * count. It contains no application logic. A class that needs a
- * collection should hold a LinkedChain field and call its methods.
+ * This class owns storage only: nodes, the head and tail references, the
+ * count, and a cursor that marks one node as current. It contains no
+ * application logic. A class that needs a collection should hold a
+ * LinkedChain field and call its methods.
  *
  * add() places the new entry at the FRONT of the chain, so entries added
  * with add() come back from toArray() in reverse order of insertion.
  * addToEnd() preserves insertion order.
  *
+ * The cursor starts before the first entry. moveNext() and movePrevious()
+ * step it one node at a time using the next and previous links. If the
+ * current entry is removed, the cursor moves back to the entry before it.
+ *
+ * Invariants: when the chain is empty, firstNode, lastNode, and currentNode
+ * are null and numberOfEntries is 0. Otherwise firstNode.previous and
+ * lastNode.next are null, and numberOfEntries equals the number of nodes.
+ *
+ * Modified from the provided singly linked version: each node now has a
+ * previous link, the chain keeps a tail reference (lastNode), and the cursor
+ * methods moveNext, movePrevious, getCurrent, and resetCursor were added.
+ *
  * Time complexity, where n is the number of entries:
  *   add              O(1)
- *   addToEnd         O(n)
+ *   addToEnd         O(1)   (was O(n) before the tail reference)
  *   remove()         O(1)
  *   remove(T)        O(n)
  *   clear            O(1)
- *   get              O(n)
+ *   get              O(n)   (walks from whichever end is closer)
  *   contains         O(n)
  *   count            O(n)
  *   size             O(1)
  *   isEmpty          O(1)
  *   toArray          O(n)
+ *   moveNext         O(1)
+ *   movePrevious     O(1)
+ *   getCurrent       O(1)
+ *   resetCursor      O(1)
  *
- * @author CS 2114 Staff
- * @version September 2026
+ * @author CS 2114 Staff, modified by Group 51
+ * @version October 2026
  *
  * @param <T> the type of entries stored in the chain
  */
 public class LinkedChain<T>
 {
     private Node<T> firstNode;   // reference to the first node, or null
+    private Node<T> lastNode;    // reference to the last node, or null
+    private Node<T> currentNode; // cursor position, or null if before start
     private int numberOfEntries; // number of nodes in the chain
 
     /**
@@ -41,6 +60,8 @@ public class LinkedChain<T>
     public LinkedChain()
     {
         firstNode = null;
+        lastNode = null;
+        currentNode = null;
         numberOfEntries = 0;
     }
 
@@ -54,7 +75,16 @@ public class LinkedChain<T>
     public boolean add(T newEntry)
     {
         requireNonNull(newEntry);
-        firstNode = new Node<T>(newEntry, firstNode);
+        Node<T> newNode = new Node<T>(newEntry, null, firstNode);
+        if (firstNode == null)
+        {
+            lastNode = newNode;
+        }
+        else
+        {
+            firstNode.previous = newNode;
+        }
+        firstNode = newNode;
         numberOfEntries++;
         return true;
     }
@@ -69,20 +99,16 @@ public class LinkedChain<T>
     public boolean addToEnd(T newEntry)
     {
         requireNonNull(newEntry);
-        Node<T> newNode = new Node<T>(newEntry);
-        if (firstNode == null)
+        Node<T> newNode = new Node<T>(newEntry, lastNode, null);
+        if (lastNode == null)
         {
             firstNode = newNode;
         }
         else
         {
-            Node<T> current = firstNode;
-            while (current.next != null)
-            {
-                current = current.next;
-            }
-            current.next = newNode;
+            lastNode.next = newNode;
         }
+        lastNode = newNode;
         numberOfEntries++;
         return true;
     }
@@ -99,8 +125,7 @@ public class LinkedChain<T>
             return null;
         }
         T result = firstNode.data;
-        firstNode = firstNode.next;
-        numberOfEntries--;
+        unlink(firstNode);
         return result;
     }
 
@@ -112,38 +137,31 @@ public class LinkedChain<T>
      */
     public boolean remove(T anEntry)
     {
-        if (anEntry == null || firstNode == null)
+        if (anEntry == null)
         {
             return false;
         }
-        if (anEntry.equals(firstNode.data))
-        {
-            firstNode = firstNode.next;
-            numberOfEntries--;
-            return true;
-        }
-        Node<T> previous = firstNode;
-        Node<T> current = firstNode.next;
+        Node<T> current = firstNode;
         while (current != null)
         {
             if (anEntry.equals(current.data))
             {
-                previous.next = current.next;
-                numberOfEntries--;
+                unlink(current);
                 return true;
             }
-            previous = current;
             current = current.next;
         }
         return false;
     }
 
     /**
-     * Removes all entries from this chain.
+     * Removes all entries from this chain and resets the cursor.
      */
     public void clear()
     {
         firstNode = null;
+        lastNode = null;
+        currentNode = null;
         numberOfEntries = 0;
     }
 
@@ -163,10 +181,22 @@ public class LinkedChain<T>
                 "Index " + index + " out of bounds for size "
                 + numberOfEntries);
         }
-        Node<T> current = firstNode;
-        for (int i = 0; i < index; i++)
+        Node<T> current;
+        if (index < numberOfEntries / 2)
         {
-            current = current.next;
+            current = firstNode;
+            for (int i = 0; i < index; i++)
+            {
+                current = current.next;
+            }
+        }
+        else
+        {
+            current = lastNode;
+            for (int i = numberOfEntries - 1; i > index; i--)
+            {
+                current = current.previous;
+            }
         }
         return current.data;
     }
@@ -260,6 +290,58 @@ public class LinkedChain<T>
     }
 
     /**
+     * Moves the cursor forward one entry. From before the start, this moves
+     * to the first entry.
+     *
+     * @return the new current entry, or null if the cursor is already at the
+     *         last entry or the chain is empty (the cursor does not move)
+     */
+    public T moveNext()
+    {
+        Node<T> target = (currentNode == null) ? firstNode : currentNode.next;
+        if (target == null)
+        {
+            return null;
+        }
+        currentNode = target;
+        return currentNode.data;
+    }
+
+    /**
+     * Moves the cursor back one entry.
+     *
+     * @return the new current entry, or null if the cursor is before the
+     *         start or at the first entry (the cursor does not move)
+     */
+    public T movePrevious()
+    {
+        if (currentNode == null || currentNode.previous == null)
+        {
+            return null;
+        }
+        currentNode = currentNode.previous;
+        return currentNode.data;
+    }
+
+    /**
+     * Gets the entry at the cursor without moving it.
+     *
+     * @return the current entry, or null if the cursor is before the start
+     */
+    public T getCurrent()
+    {
+        return (currentNode == null) ? null : currentNode.data;
+    }
+
+    /**
+     * Moves the cursor back to before the first entry.
+     */
+    public void resetCursor()
+    {
+        currentNode = null;
+    }
+
+    /**
      * Returns a readable listing of the chain, first entry first,
      * e.g. "[a, b, c]".
      *
@@ -284,6 +366,37 @@ public class LinkedChain<T>
     }
 
     /**
+     * Removes a node by linking its neighbors to each other. If the node is
+     * the cursor's current node, the cursor moves to the previous node.
+     *
+     * @param node the node to remove; must be in this chain
+     */
+    private void unlink(Node<T> node)
+    {
+        if (node == currentNode)
+        {
+            currentNode = node.previous;
+        }
+        if (node.previous == null)
+        {
+            firstNode = node.next;
+        }
+        else
+        {
+            node.previous.next = node.next;
+        }
+        if (node.next == null)
+        {
+            lastNode = node.previous;
+        }
+        else
+        {
+            node.next.previous = node.previous;
+        }
+        numberOfEntries--;
+    }
+
+    /**
      * Rejects null entries.
      *
      * @param entry the entry to check
@@ -298,34 +411,28 @@ public class LinkedChain<T>
     }
 
     /**
-     * A node in the chain. Holds one entry and a link to the next node.
+     * A node in the chain. Holds one entry and links to the nodes before
+     * and after it.
      *
      * @param <E> the type of data held in the node
      */
     private static class Node<E>
     {
-        private E data;        // entry stored in this node
-        private Node<E> next;  // link to the next node, or null
+        private E data;           // entry stored in this node
+        private Node<E> previous; // link to the previous node, or null
+        private Node<E> next;     // link to the next node, or null
 
         /**
-         * Creates a node with the given data and no next node.
+         * Creates a node with the given data and links.
          *
          * @param dataPortion the entry to store
-         */
-        private Node(E dataPortion)
-        {
-            this(dataPortion, null);
-        }
-
-        /**
-         * Creates a node with the given data and next link.
-         *
-         * @param dataPortion the entry to store
+         * @param previousNode the node that comes before this one
          * @param nextNode the node that follows this one
          */
-        private Node(E dataPortion, Node<E> nextNode)
+        private Node(E dataPortion, Node<E> previousNode, Node<E> nextNode)
         {
             data = dataPortion;
+            previous = previousNode;
             next = nextNode;
         }
     }

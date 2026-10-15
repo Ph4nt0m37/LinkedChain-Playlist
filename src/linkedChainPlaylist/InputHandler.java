@@ -3,7 +3,7 @@ package linkedChainPlaylist;
 import java.util.*;
 
 /**
- * Handles user input for the Don't Burn Out game.
+ * Handles user input for the playlist program.
  * <p>
  * This class provides methods for retrieving strings, integers, and boolean
  * values from the user. It also provides validation methods for ensuring that
