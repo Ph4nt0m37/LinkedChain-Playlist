@@ -54,7 +54,7 @@ We made the provided class doubly linked instead of adding a separate class, so 
 - **Paulo and Rishad:** `CustomSongHandler` and playback.
 - **Ryan and Maddie:** `CustomSongHandlerTest` and `MainTest`.
 - **Rishad:** the `switchTo` fix.
-- **Maddie:** the `addSong(null)` test.
+- **Maddie:** the `SongTest` and the `PlaylistTest` classes.
 
 ## Attribution
 
