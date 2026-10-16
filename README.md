@@ -1,37 +1,72 @@
-# LinkedChain-Playlist
-
 ## Reflection
+
 ### What changed from your specification?
-We added a new class, the Library class, to store multiple playlists for a user. We added this because being able to support multiple playlists is extremely useful and allows us to implement two different LinkedChains.
-We also added a couple or extra methods that we didn't think we would need. For example, in the InputHandler class, we added the getNonBlankInput method to get a non-blank input.
+- **Classes:**
+  - Added `Library`, which stores a `LinkedChain<Playlist>`, so the chain holds a second element type and users can have several playlists. *(spec feedback)*
+  - `Main` now runs the menu and `Playlist` only manages songs. The spec had Playlist doing both. *(spec feedback)*
+  - `CustomSongHandler` isn't built yet.
+- **Method signatures:**
+  - `removeSong` now returns `boolean`. *(spec feedback)*
+  - `nextSong` plays the next song in order instead of a random one. *(spec feedback)*
+  - Added `previousSong`, `getCurrentSong`, `getSong`, `size` and `isEmpty` to `Playlist`.
+  - Added `equals`, `hashCode` and `toString` to `Song`, so removing a song by value works. *(spec feedback*
+  - Added `getNonBlankInput` to `InputHandler`. The spec's generic `getUserInput` wasn't built. 
+- **Where validation lives:** same as the spec, with one change. Main checks for an empty playlist before calling Playlist, so it can show a clearer message. *(own reflection)*
+- **Test cases:** the spec had one sentence. We wrote 91 JUnit tests across `SongTest`, `PlaylistTest`, `LibraryTest` and `InputHandlerTest`, including an empty playlist and removing a song that isn't there. *(spec feedback; InputHandlerTest and LibraryTest drafted with GenAI)*
+
 ### What changed in the LinkedChain?
-We modified the LinkedChain to be a doubly LinkedChain so that we could play the next song and the previous song.
+We made the provided class doubly linked instead of adding a separate class, so every element type still goes through one `LinkedChain<T>`. We added:
+- a `previous` link on each node
+- a tail reference, which makes `addToEnd` O(1)
+- a cursor (`moveNext`, `movePrevious`, `getCurrent`, `resetCursor`), so next and previous song are O(1)
+- the missing `package` line
+
+*(scope + GenAI)*
+
 ### What happened to your unknowns?
-We haven't quite started with implementing the song playing functionality, so that is our task for this week.
+- **Figured out:** moving backwards through a playlist, using the doubly linked chain.
+- **Still open:** audio playback with the Java Sound API, and loading songs from files.
+
 ### What doesn't work yet?
-Most of our MVP features are done, so the last thing that doesn't work is our stretch goal of playing songs from their audio file.
+- No audio playback or file loading yet.
+- `Main` has no tests.
+- `Library.switchTo` selects the object passed in, not the matching stored playlist.
+- Playlists aren't saved between runs.
 
 ## Next Steps
-### What is left to finish the MVP? The remaining features and fixes, in the order you will do them.
-The MVP is mostly done at this point. Whilst we have our test cases written, we might do some further program testing to ensure everything works as intended.
-### Which stretch goals will you attempt? The ones from your scope you are committing to, and the ones you are dropping.
-We are still committing to our stretch goal of playing songs with the Java Sound API.
-### What new tests will you need? The methods and bad-input cases the added work must cover.
-Once we finish adding the Sound API, we need to add test cases to make sure that all of the sound files are being loaded and played correctly. We need to be able to catch if a song file doesn't exist or we don't have permission to play it and report the error to the user.
-### Who does what? Which team member owns each remaining item.
-Paulo and Rishad - CustomSongHandler.java
-Ryan and Maddie - CustomSongHandlerTest.java and general testing of program
+
+### What is left to finish the MVP?
+1. Fix `Library.switchTo` and add a test for it. *(Rishad)*
+2. Add a test for `Playlist.addSong(null)`. *(Maddie)*
+3. Write `MainTest` using simulated input. *(Ryan)*
+4. Add run instructions and the GenAI note to the README. *(All)*
+
+### Which stretch goals will you attempt?
+- **Committed:** `CustomSongHandler` to load songs from `.wav` files, and playback with the Java Sound API, which can't play MP3. *(Paulo and Rishad)*
+
+### What new tests will you need?
+`CustomSongHandlerTest` *(Ryan and Maddie)*:
+- **Normal cases:** a valid `.wav` file; a folder with several songs.
+- **Bad input:** a missing file, a non-audio or `.mp3` file, a null or blank path, and an empty or missing folder.
+- **Playback:** a song with no file shows an error message instead of crashing.
+
+### Who does what?
+- **Paulo and Rishad:** `CustomSongHandler` and playback.
+- **Ryan and Maddie:** `CustomSongHandlerTest` and `MainTest`.
+- **Rishad:** the `switchTo` fix.
+- **Maddie:** the `addSong(null)` test.
 
 ## Attribution
-| Class                 | Person | Conribution                    |
-|-----------------------|--------|--------------------------------|
-| Playlist.java         | Paulo  | Wrote                          |
-| Song.java             | Paulo  | Wrote                          |
-| InputHandler.java     | Paulo  | Wrote                          |
-| Library.java          | Rishad | Wrote                          |
-| Main.java             | Rishad | Wrote                          |
-| InputHandlerTest.java | Paulo  | Used GenAI to write test cases |
-| LibraryTest.java      | Paulo  | Used GenAI to write test cases |
-| SongTest.java         | Maddie | Wrote                          |
-| PlaylistTest.java     | Maddie | Wrote                          |
-| LinkedChain.java      | Rishad | Modified                       |
+
+| Class | Person | Contribution |
+| --- | --- | --- |
+| Playlist.java | Paulo | Wrote |
+| Song.java | Paulo | Wrote |
+| InputHandler.java | Paulo | Wrote |
+| Library.java | Rishad | Wrote |
+| Main.java | Rishad | Wrote |
+| InputHandlerTest.java | Paulo | Used GenAI to write test cases |
+| LibraryTest.java | Paulo | Used GenAI to write test cases |
+| SongTest.java | Maddie | Wrote |
+| PlaylistTest.java | Maddie | Wrote |
+| LinkedChain.java | Rishad | Modified |
