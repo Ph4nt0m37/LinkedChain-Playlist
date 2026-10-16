@@ -5,6 +5,8 @@ import java.util.Random;
 /**
  * A named list of songs that can be played forward and backward and
  * shuffled.
+ * 
+ * @author Paulo Korowajczuk Nader
  */
 public class Playlist
 {

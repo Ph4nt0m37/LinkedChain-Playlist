@@ -4,6 +4,8 @@ import java.util.Objects;
 
 /**
  * Stores information about a single song.
+ * 
+ * @author Paulo Korowajczuk Nader
  */
 public class Song
 {
